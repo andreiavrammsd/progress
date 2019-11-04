@@ -1,3 +1,4 @@
+// Package progress offers an indicator that a certain flow is actually working.
 package progress
 
 import (
@@ -6,14 +7,17 @@ import (
 	"sync"
 )
 
+// Config allows setup of progress.
 type Config struct {
 	Drawer Drawer
 	Writer io.Writer
 	Error  Error
 }
 
+// Error represents the callback type to pass if you want to see all errors from a Drawer
 type Error func(error)
 
+// Progress represents a progress instance.
 type Progress struct {
 	drawer Drawer
 	writer io.Writer
@@ -23,6 +27,7 @@ type Progress struct {
 	lock   sync.Mutex
 }
 
+// Progress should be called each time the Drawer should update.
 func (p *Progress) Progress() {
 	p.lock.Lock()
 	if p.tick != nil {
@@ -31,6 +36,7 @@ func (p *Progress) Progress() {
 	p.lock.Unlock()
 }
 
+// Stop cancels progress animation.
 func (p *Progress) Stop() {
 	close(p.stop)
 }
@@ -57,6 +63,7 @@ func (p *Progress) start() {
 	}()
 }
 
+// New creates Progress instance.
 func New(c *Config) *Progress {
 	if c == nil {
 		c = &Config{}

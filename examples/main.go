@@ -32,7 +32,6 @@ func main() {
 			i := 0
 			for {
 				p.Progress()
-				fmt.Println(x, i)
 
 				i++
 				if i > 15 {
@@ -51,8 +50,6 @@ func main() {
 			}
 		}(p, j)
 	}
-
-	fmt.Println("here")
 
 	time.Sleep(time.Hour)
 }
