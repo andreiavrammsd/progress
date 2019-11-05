@@ -2,6 +2,7 @@
 package progress
 
 import (
+	"context"
 	"io"
 	"os"
 	"sync"
@@ -9,9 +10,10 @@ import (
 
 // Config allows setup of progress.
 type Config struct {
-	Drawer Drawer
-	Writer io.Writer
-	Error  Error
+	Drawer  Drawer
+	Writer  io.Writer
+	Error   Error
+	Context context.Context
 }
 
 // Error represents the callback type to pass if you want to see all errors from a Drawer
@@ -19,48 +21,21 @@ type Error func(error)
 
 // Progress represents a progress instance.
 type Progress struct {
+	ch     chan struct{}
+	mtx    sync.Mutex
 	drawer Drawer
 	writer io.Writer
-	tick   chan struct{}
-	stop   chan struct{}
 	error  Error
-	lock   sync.Mutex
+	ctx    context.Context
 }
 
 // Progress should be called each time the Drawer should update.
 func (p *Progress) Progress() {
-	p.lock.Lock()
-	if p.tick != nil {
-		p.tick <- struct{}{}
+	p.mtx.Lock()
+	if p.ch != nil {
+		p.ch <- struct{}{}
 	}
-	p.lock.Unlock()
-}
-
-// Stop cancels progress animation.
-func (p *Progress) Stop() {
-	close(p.stop)
-}
-
-func (p *Progress) start() {
-	p.tick = make(chan struct{})
-	p.stop = make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-p.tick:
-				if err := p.drawer.Draw(p.writer); err != nil && p.error != nil {
-					p.error(err)
-				}
-			case <-p.stop:
-				p.lock.Lock()
-				close(p.tick)
-				p.tick = nil
-				p.lock.Unlock()
-				return
-			}
-		}
-	}()
+	p.mtx.Unlock()
 }
 
 // New creates Progress instance.
@@ -77,13 +52,34 @@ func New(c *Config) *Progress {
 		c.Writer = os.Stdout
 	}
 
+	if c.Context == nil {
+		c.Context = context.Background()
+	}
+
 	p := &Progress{
+		ch:     make(chan struct{}),
 		drawer: c.Drawer,
 		writer: c.Writer,
 		error:  c.Error,
+		ctx:    c.Context,
 	}
 
-	p.start()
+	go func() {
+		for {
+			select {
+			case <-p.ch:
+				if err := p.drawer.Draw(p.writer); err != nil && p.error != nil {
+					p.error(err)
+				}
+			case <-p.ctx.Done():
+				p.mtx.Lock()
+				close(p.ch)
+				p.ch = nil
+				p.mtx.Unlock()
+				return
+			}
+		}
+	}()
 
 	return p
 }

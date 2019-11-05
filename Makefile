@@ -5,7 +5,7 @@ COVER_PROFILE=cover.out
 all: test lint
 
 test:
-	go test -race -cover
+	go test -race -cover -v
 
 lint:
 	golint
@@ -15,4 +15,4 @@ lint:
 	./bin/golangci-lint run
 
 coverage:
-	go test -coverprofile $(COVER_PROFILE) && go tool cover -html=$(COVER_PROFILE)
+	go test -race -v -coverprofile $(COVER_PROFILE) && go tool cover -html=$(COVER_PROFILE)
