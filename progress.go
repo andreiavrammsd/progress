@@ -48,7 +48,9 @@ func (p *Progress) Progress() {
 	p.mtx.Unlock()
 }
 
-// New creates Progress instance.
+// New creates Progress instance and waits for progress steps on a routine.
+// The routine will exit when context passed in Config is done (canceled, deadline met,
+// timed out). If no context passed, it will live forever.
 func New(c *Config) *Progress {
 	if c == nil {
 		c = &Config{}
