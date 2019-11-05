@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -104,4 +105,53 @@ func Example_custom_drawer() {
 	// => C
 	// => A
 	// err
+}
+
+func Example_advanced() {
+	done := make(chan struct{})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	c := &Config{
+		Drawer:  &Characters{},
+		Writer:  nil,
+		Error:   nil,
+		Context: ctx,
+	}
+	p := New(c)
+
+	task := func(p *Progress) {
+		defer close(done)
+		wg := sync.WaitGroup{}
+
+		for i := 0; i <= 1; i++ {
+			wg.Add(1)
+
+			go func(p *Progress) {
+				defer wg.Done()
+
+				counter := 0
+				for {
+					if counter == 3 {
+						break
+					}
+					counter++
+
+					// Long work
+					time.Sleep(time.Millisecond * 50)
+
+					// Progress step
+					p.Progress()
+				}
+			}(p)
+		}
+
+		wg.Wait()
+	}
+
+	go task(p)
+	<-done
+	cancel()
+
+	// Output:
+	// ......
 }
