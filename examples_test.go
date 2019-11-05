@@ -16,11 +16,9 @@ func Example_basic() {
 	p := New(c)
 
 	p.Progress()
-	p.Progress()
-	p.Progress()
 
 	// Output:
-	// ...
+	// .
 }
 
 func ExampleWithTimeout() {
