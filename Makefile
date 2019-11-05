@@ -1,4 +1,4 @@
-.PHONY: all test lint coverage integration env
+.PHONY: all test lint coverage
 
 COVER_PROFILE=cover.out
 
