@@ -1,4 +1,7 @@
-// Package progress offers an indicator that a certain flow is actually working.
+// Package progress offers a method to display a progress indicating that certain tasks are really running,
+// by drawing on the screen various animations. Each step of task should call the Progress method to update
+// the animation.
+// Tested with `xterm`.
 package progress
 
 import (
@@ -10,13 +13,20 @@ import (
 
 // Config allows setup of progress.
 type Config struct {
-	Drawer  Drawer
-	Writer  io.Writer
-	Error   Error
+	// Drawer is the Drawer implementation.
+	Drawer Drawer
+
+	// Writer is the writer where Drawer writes content.
+	Writer io.Writer
+
+	// Error is the callback to receive Drawer errors.
+	Error Error
+
+	// Context is used to stop the progress.
 	Context context.Context
 }
 
-// Error represents the callback type to pass if you want to see all errors from a Drawer
+// Error represents the callback type to pass if you want to see all errors from a Drawer.
 type Error func(error)
 
 // Progress represents a progress instance.

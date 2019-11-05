@@ -1,6 +1,12 @@
 # Progress
 
-A basic tool for Go programs to display a progress indicating that certain flows you may run are being executed.
+A basic tool for Go programs to display a progress indicating that certain tasks you may run are being executed.
+
+Tested with `xterm`.
+
+## Docs
+
+[![GoDoc](https://godoc.org/github.com/andreiavrammsd/progress?status.svg)](https://godoc.org/github.com/andreiavrammsd/progress)
 
 ## Install
 
