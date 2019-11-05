@@ -2,13 +2,14 @@ package progress
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
-	"sync"
 	"time"
 )
 
-func ExampleNew() {
+func Example_basic() {
 	c := &Config{
 		Drawer: &Characters{Characters: []byte(".")},
 	}
@@ -56,9 +57,35 @@ func ExampleWithCancel() {
 	// .
 }
 
-func ExampleNew2() {
+type customDrawer struct {
+	chars  []rune
+	prefix string
+	suffix string
+	index  int
+}
+
+func (c *customDrawer) Draw(w io.Writer) (err error) {
+	_, err = w.Write([]byte(c.prefix + string(c.chars[c.index]) + c.suffix))
+
+	c.index++
+	if c.index == len(c.chars) {
+		c.index = 0
+	}
+
+	if c.index == 1 {
+		err = errors.New("err")
+	}
+
+	return
+}
+
+func Example_custom_drawer() {
 	c := Config{
-		Drawer: &Characters{Characters: []byte("+")},
+		Drawer: &customDrawer{
+			chars:  []rune{'A', 'B', 'C'},
+			prefix: "=> ",
+			suffix: "\n",
+		},
 		Writer: os.Stdout,
 		Error: func(err error) {
 			fmt.Println(err)
@@ -66,17 +93,17 @@ func ExampleNew2() {
 	}
 	p := New(&c)
 
-	wg := sync.WaitGroup{}
+	// A running task
 	for i := 1; i <= 4; i++ {
-		wg.Add(1)
-		go func(p *Progress) {
-			defer wg.Done()
-			p.Progress()
-		}(p)
+		p.Progress()
+		time.Sleep(time.Millisecond)
 	}
-	wg.Wait()
-	time.Sleep(time.Second)
 
 	// Output:
-	// ++++
+	// => A
+	// err
+	// => B
+	// => C
+	// => A
+	// err
 }
