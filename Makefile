@@ -4,10 +4,15 @@ COVER_PROFILE=cover.out
 
 all: test lint
 
+GOLINT := $(shell which golint)
+
 test:
 	go test -race -cover -v
 
 lint:
+ifndef GOLINT
+		go get -u golang.org/x/lint/golint
+endif
 	golint
 
 	@[ ! -f ./bin/golangci-lint ] && curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh \
