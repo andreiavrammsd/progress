@@ -21,3 +21,6 @@ endif
 
 coverage:
 	go test -race -v -coverprofile $(COVER_PROFILE) && go tool cover -html=$(COVER_PROFILE)
+
+prepushhook:
+	echo '#!/bin/sh\n\nmake' > .git/hooks/pre-push && chmod +x .git/hooks/pre-push
