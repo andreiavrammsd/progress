@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -22,7 +23,7 @@ func Example_basic() {
 	// .
 }
 
-func ExampleWithTimeout() {
+func Example_with_timeout() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*300)
 	defer cancel()
 
@@ -41,7 +42,7 @@ func ExampleWithTimeout() {
 	// .
 }
 
-func ExampleWithCancel() {
+func Example_with_cancel() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*300)
 	c := &Config{
 		Drawer:  &Characters{Characters: []byte(".")},
@@ -112,9 +113,10 @@ func Example_advanced() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Config{
-		Drawer:  &Characters{},
-		Writer:  nil,
-		Error:   nil,
+		Drawer: &Characters{},
+		Error: func(err error) {
+			log.Println(err)
+		},
 		Context: ctx,
 	}
 	p := New(c)
@@ -136,11 +138,11 @@ func Example_advanced() {
 					}
 					counter++
 
-					// Long work
-					time.Sleep(time.Millisecond * 50)
-
 					// Progress step
 					p.Progress()
+
+					// Long work
+					time.Sleep(time.Millisecond * 50)
 				}
 			}(p)
 		}

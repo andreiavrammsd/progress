@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -42,12 +43,14 @@ func (d *drawerErrorMock) Draw(io.Writer) (err error) {
 
 func TestProgress_ProgressWithError(t *testing.T) {
 	c := &Config{}
-
 	c.Drawer = &drawerErrorMock{}
 
 	var drawerError error
+	mtx := sync.Mutex{}
 	c.Error = func(err error) {
+		mtx.Lock()
 		drawerError = err
+		mtx.Unlock()
 	}
 
 	var cancel func()
@@ -57,9 +60,11 @@ func TestProgress_ProgressWithError(t *testing.T) {
 	p.Progress()
 	cancel()
 
+	mtx.Lock()
 	if drawerError == nil {
 		t.Error("error expected")
 	}
+	mtx.Unlock()
 }
 
 type drawerMock struct {
